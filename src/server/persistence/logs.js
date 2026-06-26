@@ -1,23 +1,5 @@
 const pool = require('./connection');
 
-module.exports.createTable = async (
-    {
-        client = null,
-    } = {}
-) => {
-    const query = `
-      CREATE TABLE IF NOT EXISTS logs (
-        id SERIAL PRIMARY KEY NOT NULL,
-        timestamp TIMESTAMPTZ,
-        ms INTEGER,
-        received_at TIMESTAMPTZ NOT NULL,
-        level VARCHAR(5) NOT NULL,
-        message TEXT NOT NULL
-      );
-    `;
-    const instance = client || pool;
-    await instance.query(query);
-};
 
 module.exports.dropTable = async (
     {

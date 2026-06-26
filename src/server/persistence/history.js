@@ -3,22 +3,6 @@ const path = require('node:path');
 const pool = require('./connection');
 
 
-module.exports.createTable = async (
-    {
-        client = null,
-    } = {}
-) => {
-    const query = `
-      CREATE TABLE IF NOT EXISTS history (
-        timestamp TIMESTAMPTZ PRIMARY KEY NOT NULL,
-        moisture_pct INTEGER NOT NULL,
-        did_water BOOLEAN NOT NULL
-      );
-    `;
-    const instance = client || pool;
-    await instance.query(query);
-};
-
 module.exports.dropTable = async (
     {
         client = null,

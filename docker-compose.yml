@@ -1,4 +1,18 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: autowaterer-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/server/persistence/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    env_file:
+      - .env
+
   express:
     build:
       context: ./src/server
@@ -9,6 +23,8 @@ services:
       - "3001:3001"
     env_file:
       - .env
+    depends_on:
+      - postgres
 
   nextjs:
     build:
@@ -24,3 +40,6 @@ services:
       - express
     env_file:
       - .env
+
+volumes:
+  postgres_data:

@@ -1,0 +1,23 @@
+BEGIN TRANSACTION;
+
+CREATE TABLE IF NOT EXISTS history (
+    timestamp TIMESTAMPTZ PRIMARY KEY NOT NULL,
+    moisture_pct INTEGER NOT NULL,
+    did_water BOOLEAN NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+    key VARCHAR(255) PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS logs (
+    id SERIAL PRIMARY KEY NOT NULL,
+    timestamp TIMESTAMPTZ,
+    ms INTEGER,
+    received_at TIMESTAMPTZ NOT NULL,
+    level VARCHAR(5) NOT NULL,
+    message TEXT NOT NULL
+);
+
+COMMIT;
