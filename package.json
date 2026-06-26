@@ -6,8 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "api": "node src/server/index.js",
     "lint": "eslint",
+    "api": "node src/server/index.js",
+    "api:dev": "nodemon src/server/index.js",
+    "initdb": "node src/server/init_db.js",
+    "sync": "node src/server/sync_data.js",
     "sync:history": "node src/server/sync_history.js",
     "sync:settings": "node src/server/sync_settings.js"
   },
@@ -18,9 +21,14 @@
     "react-dom": "19.2.4",
     "react-redux": "^9.3.0",
     "recharts": "^3.8.1",
-    "sass": "^1.100.0"
+    "sass": "^1.100.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
+    "nodemon": "^3.1.14",
     "@recharts/devtools": "^0.0.14",
     "@types/node": "^20",
     "@types/react": "^19",

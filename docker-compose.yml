@@ -15,8 +15,8 @@ services:
 
   express:
     build:
-      context: ./src/server
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: src/server/Dockerfile
     container_name: autowaterer-api
     restart: unless-stopped
     ports:
