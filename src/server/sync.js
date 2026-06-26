@@ -1,13 +1,12 @@
 const { insertHistoryLines, getLatestEntryTimestamp } = require('./persistence/history');
 const { upsertSettings } = require('./persistence/settings');
 const { getLastHistorySyncTimestamp, setLastHistorySyncTimestamp, setLastSettingsSyncTimestamp } = require('./persistence/sync_state');
+const { MCU_BASE_URL } = require('./mcu');
 
 
-const MCU_IP_ADDRESS = '192.168.86.200';
+const MCU_HISTORY_ENDPOINT = `${MCU_BASE_URL}/history`;
 
-const MCU_HISTORY_ENDPOINT = `http://${MCU_IP_ADDRESS}/history`;
-
-const MCU_SETTINGS_ENDPOINT = `http://${MCU_IP_ADDRESS}/settings`;
+const MCU_SETTINGS_ENDPOINT = `${MCU_BASE_URL}/settings`;
 
 module.exports.syncHistory = async () => {
     const lastEntryTimestamp = await getLatestEntryTimestamp();
@@ -69,5 +68,16 @@ module.exports.syncSettings = async function getSettings() {
     catch (error) {
         console.error('Error upserting settings into DB:', error);
         throw error;
+    }
+}
+
+module.exports.updateSetting = async function updateSetting(key, value) {
+    const response = await fetch(`${MCU_SETTINGS_ENDPOINT}/${key}`, {
+        method: "POST",
+        body: JSON.stringify(value),
+    });
+
+    if (response.ok) {
+        await module.exports.syncSettings();
     }
 }

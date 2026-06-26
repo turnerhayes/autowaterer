@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 Log Viewer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --muted: #484f58;
+    --DEBUG: #6e7681; --INFO: #3fb950; --WARN: #d29922; --ERROR: #f85149;
+    --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono);
+         font-size: 13px; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+
+  header { display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+           background: var(--surface); border-bottom: 1px solid var(--border);
+           flex-shrink: 0; flex-wrap: wrap; }
+  header h1 { font-size: 13px; font-weight: 600; }
+
+  .pill { display: flex; align-items: center; gap: 5px; padding: 3px 10px;
+          border-radius: 20px; border: 1px solid var(--border); cursor: pointer;
+          font-family: var(--mono); font-size: 12px; background: transparent;
+          color: var(--text); user-select: none; }
+  .pill[data-level="DEBUG"] { --lc: var(--DEBUG); }
+  .pill[data-level="INFO"]  { --lc: var(--INFO);  }
+  .pill[data-level="WARN"]  { --lc: var(--WARN);  }
+  .pill[data-level="ERROR"] { --lc: var(--ERROR); }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lc); }
+  .pill.on   { border-color: var(--lc); color: var(--lc); }
+  .pill.off  { opacity: 0.35; }
+
+  .spacer { flex: 1; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
+  .status-dot.ok  { background: var(--INFO); box-shadow: 0 0 6px var(--INFO); }
+  .status-dot.err { background: var(--ERROR); }
+
+  button.act { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+               background: transparent; color: var(--text); font-family: var(--mono);
+               font-size: 12px; cursor: pointer; }
+  button.act:hover { background: var(--border); }
+
+  input[type="search"] { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);
+                         background: var(--bg); color: var(--text); font-family: var(--mono);
+                         font-size: 12px; width: 180px; outline: none; }
+  input[type="search"]:focus { border-color: #388bfd; }
+
+  #log { flex: 1; overflow-y: auto; padding: 6px 0; }
+
+  .entry { display: grid; grid-template-columns: 80px 52px 96px 1fr;
+           gap: 0 12px; padding: 2px 14px; line-height: 1.6;
+           border-left: 2px solid transparent; }
+  .entry:hover { background: var(--surface); }
+  .entry.hidden { display: none; }
+  .entry[data-level="DEBUG"] { border-left-color: var(--DEBUG); }
+  .entry[data-level="INFO"]  { border-left-color: var(--INFO);  }
+  .entry[data-level="WARN"]  { border-left-color: var(--WARN);  }
+  .entry[data-level="ERROR"] { border-left-color: var(--ERROR); }
+  .t   { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lv  { font-weight: 600; }
+  .entry[data-level="DEBUG"] .lv { color: var(--DEBUG); }
+  .entry[data-level="INFO"]  .lv { color: var(--INFO);  }
+  .entry[data-level="WARN"]  .lv { color: var(--WARN);  }
+  .entry[data-level="ERROR"] .lv { color: var(--ERROR); }
+  .src { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msg { word-break: break-all; white-space: pre-wrap; }
+
+  footer { display: flex; align-items: center; gap: 10px; padding: 5px 14px;
+           background: var(--surface); border-top: 1px solid var(--border);
+           font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  #count { margin-left: auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ESP32 Log Viewer</h1>
+  <button class="pill on" data-level="DEBUG"><span class="dot"></span>DEBUG</button>
+  <button class="pill on" data-level="INFO" ><span class="dot"></span>INFO</button>
+  <button class="pill on" data-level="WARN" ><span class="dot"></span>WARN</button>
+  <button class="pill on" data-level="ERROR"><span class="dot"></span>ERROR</button>
+  <div class="spacer"></div>
+  <input type="search" id="search" placeholder="filter…" autocomplete="off">
+  <button class="act" id="clearBtn">Clear</button>
+  <button class="act" id="followBtn">⏬ Follow</button>
+  <span class="status-dot" id="dot"></span>
+</header>
+
+<div id="log" role="log" aria-live="polite"></div>
+
+<footer>
+  <span id="status">Connecting…</span>
+  <span id="count">0 entries</span>
+</footer>
+
+<script>
+const logEl  = document.getElementById('log');
+const dot    = document.getElementById('dot');
+const status = document.getElementById('status');
+const count  = document.getElementById('count');
+const search = document.getElementById('search');
+
+let n = 0, autoFollow = true, searchTerm = '';
+const active = new Set(['DEBUG','INFO','WARN','ERROR']);
+
+document.querySelectorAll('.pill[data-level]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const l = btn.dataset.level;
+    active.has(l) ? (active.delete(l), btn.classList.replace('on','off'))
+                  : (active.add(l),    btn.classList.replace('off','on'));
+    refilter();
+  });
+});
+
+search.addEventListener('input', () => { searchTerm = search.value.toLowerCase(); refilter(); });
+
+function refilter() {
+  for (const el of logEl.children) el.classList.toggle('hidden', !visible(el));
+}
+function visible(el) {
+  return active.has(el.dataset.level) &&
+         (!searchTerm || el.dataset.raw.toLowerCase().includes(searchTerm));
+}
+
+logEl.addEventListener('scroll', () => {
+  autoFollow = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 40;
+  document.getElementById('followBtn').style.opacity = autoFollow ? '0.4' : '1';
+});
+document.getElementById('followBtn').addEventListener('click', () => {
+  autoFollow = true; logEl.scrollTop = logEl.scrollHeight;
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  logEl.innerHTML = ''; n = 0; count.textContent = '0 entries';
+});
+
+function addEntry({ level, ms, timestamp, message, source, raw, receivedAt }) {
+  const el = document.createElement('div');
+  el.className = 'entry';
+  el.dataset.level = level;
+  el.dataset.raw   = raw || message;
+  const hms = new Date(
+    timestamp * 1000 // Unix timestamp -> JS timestamp
+  ).toLocaleTimeString('en-US', { hour12: false });
+  el.innerHTML = `<span class="t">${h(ms ? `${ms}ms` : hms)}</span>
+    <span class="lv">${h(level)}</span>
+    <span class="src">${h(source??'')}</span>
+    <span class="msg">${h(message)}</span>`;
+  if (!visible(el)) el.classList.add('hidden');
+  logEl.appendChild(el);
+  count.textContent = `${++n} entries`;
+  if (autoFollow) logEl.scrollTop = logEl.scrollHeight;
+}
+
+function h(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function connect() {
+  // Relative URL — works regardless of what path Express mounted this under.
+  let url = document.location.pathname;
+  if (!url.endsWith('/')) {
+    url += '/';
+  }
+  url += 'stream';
+  const es = new EventSource(url);
+  es.onopen = () => { dot.className = 'status-dot ok'; status.textContent = 'Connected'; };
+  es.onmessage = e => { try { addEntry(JSON.parse(e.data)); } catch(_){} };
+  es.onerror = () => {
+    dot.className = 'status-dot err';
+    status.textContent = 'Disconnected — retrying…';
+    es.close();
+    setTimeout(connect, 3000);
+  };
+}
+connect();
+</script>
+</body>
+</html>

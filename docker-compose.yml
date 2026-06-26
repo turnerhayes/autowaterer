@@ -1,0 +1,26 @@
+services:
+  express:
+    build:
+      context: ./src/server
+      dockerfile: Dockerfile
+    container_name: autowaterer-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+
+  nextjs:
+    build:
+      context: ./
+      dockerfile: src/app/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://toth-server.local:3001
+    container_name: autowaterer-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - express
+    env_file:
+      - .env

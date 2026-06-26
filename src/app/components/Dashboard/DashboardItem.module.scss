@@ -1,0 +1,31 @@
+.root {
+    border: 1px solid var(--border);
+}
+
+.header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 8px;
+}
+
+.titleRow {
+    display: flex;
+}
+
+.toggleMinimizeButton {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 20px;
+    margin-left: auto;
+    padding: 4px 10px;
+}
+
+.controls {
+    display: flex;
+}
+
+.hidden {
+    height: 0;
+    overflow: hidden;
+}

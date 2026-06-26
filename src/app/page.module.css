@@ -2,6 +2,13 @@
   --background: #fafafa;
   --foreground: #fff;
 
+  
+  --border: #30363d;
+  --text: #c9d1d9;
+  --muted: #484f58;
+  --DEBUG: #6e7681; --INFO: #3fb950; --WARN: #d29922; --ERROR: #f85149;
+  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
   --text-primary: #000;
   --text-secondary: #666;
 

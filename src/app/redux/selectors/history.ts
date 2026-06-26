@@ -1,11 +1,16 @@
-import { RootState } from "@/app/redux/store";
 import { createSelector } from "@reduxjs/toolkit";
+import { api } from "@/app/api/api";
 
-export const getHistory = (state: RootState) => state.history.history;
-
-export const getLatestHistoryEntry = createSelector(
-  [getHistory],
-  (history) => history[history.length - 1]
+export const getHistory = createSelector(
+  [
+    api.endpoints.getHistory.select(),
+  ],
+  ({data}) => data?.history
 );
 
-export const getLastSyncTimestamp = (state: RootState) => state.history.lastSyncTimestamp;
+export const getLastSyncTimestamp = createSelector(
+  [
+    api.endpoints.getHistory.select(),
+  ],
+  ({data}) => data?.lastSyncTimestamp
+);

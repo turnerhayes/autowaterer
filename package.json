@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "api": "node src/server/index.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:history": "node src/server/sync_history.js",
+    "sync:settings": "node src/server/sync_settings.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",

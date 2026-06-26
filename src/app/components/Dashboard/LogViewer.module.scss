@@ -1,0 +1,124 @@
+.followButton {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+.levelFilters {
+    display: flex;
+    font-size: 13px;
+    gap: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    
+    button {
+        &[data-level="DEBUG"] {
+            --level-color: var(--DEBUG);
+        }
+
+        &[data-level="INFO"] {
+            --level-color: var(--INFO);
+        }
+
+        &[data-level="WARN"] {
+            --level-color: var(--WARN);
+        }
+
+        &[data-level="ERROR"] {
+            --level-color: var(--ERROR);
+        }
+        
+        &::before {
+            content: "";
+            display: block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentcolor;
+        }
+        
+        align-items: center;
+        appearance: none;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-color: currentColor;
+        border-radius: 20px;
+        color: var(--text);
+        cursor: pointer;
+        display: flex;
+        font-family: var(--mono);
+        font-size: 12px;
+        gap: 5px;
+        padding: 3px 10px;
+
+        &.on {
+            color: var(--level-color);
+        }
+    }
+}
+
+.filterContainer {
+    display: flex;
+    font-size: 13px;
+}
+
+.entryContainer {
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    height: 30em;
+    overflow: auto;
+}
+
+.dateHeader {
+    background-color: #161b22;
+    font-size: 16px;
+    position: sticky;
+    top: 0;
+    width: 100%;
+}
+
+.entryLine {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+
+    &[data-level="DEBUG"] {
+        --level-color: var(--DEBUG);
+    }
+    &[data-level="INFO"] {
+        --level-color: var(--INFO);
+    }
+    &[data-level="WARN"] {
+        --level-color: var(--WARN);
+    }
+    &[data-level="ERROR"] {
+        --level-color: var(--ERROR);
+    }
+
+    :nth-child(1) {
+        width: 20%;
+        color: var(--muted);
+    }
+    :nth-child(2) {
+        width: 10%;
+        color: var(--level-color);
+    }
+    :nth-child(3) {
+        flex: 1;
+    }
+}
+
+.footer {
+    display: flex;
+    border-top: 1px solid var(--border);
+    padding: 14px 8px;
+}
+
+.entryCount {
+    margin-left: auto;
+}

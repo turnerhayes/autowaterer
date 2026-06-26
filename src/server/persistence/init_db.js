@@ -7,6 +7,10 @@ const {
     createTable: createSettingsTable,
     dropTable: dropSettingsTable
 } = require('./settings');
+const {
+    createTable: createLogsTable,
+    dropTable: dropLogsTable
+} = require('./logs');
 
 module.exports.dropTables = async () => {
     const client = await pool.connect();
@@ -14,6 +18,7 @@ module.exports.dropTables = async () => {
     try {
         await dropHistoryTable({ client });
         await dropSettingsTable({ client });
+        await dropLogsTable({ client });
         await client.query('COMMIT');
     }
     catch (error) {
@@ -31,6 +36,7 @@ module.exports.initDb = async () => {
     try {
         await createHistoryTable({ client });
         await createSettingsTable({ client });
+        await createLogsTable({ client });
         await client.query('COMMIT');
     }
     catch (error) {

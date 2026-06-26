@@ -3,9 +3,11 @@ require('../env');
 const express = require('express');
 const cors = require('cors');
 const { getHistory } = require('../persistence/history');
-const { syncHistory, syncSettings } = require('../sync');
+const { syncHistory, syncSettings, updateSetting } = require('../sync');
 const { getLastHistorySyncTimestamp, getLastSettingsSyncTimestamp, setLastSettingsSyncTimestamp } = require('../persistence/sync_state');
 const { getSettings } = require('../persistence/settings');
+const { getMoisture } = require('../mcu');
+const { getLastHealthyPing } = require('../heartbeat');
 
 
 const maxSettingsSyncAgeMsString = process.env.MAX_SETTINGS_SYNC_AGE_MS;
@@ -21,7 +23,15 @@ if (isNaN(maxSettingsSyncAgeMs)) {
 }
 
 const router = express.Router();
-router.use(cors());
+router.use(
+    cors(),
+    express.json({
+        strict: false,
+    }),
+    express.urlencoded({
+        extended: true,
+    }),
+);
 
 const prepareEntry = (entry) => ({
     ...entry,
@@ -67,6 +77,31 @@ router.route('/sync').get(async (req, res) => {
     }
 });
 
+router.get('/moisture', async (req, res) => {
+    try {
+        const moisture = await getMoisture();
+        
+        res.status(200).send(moisture);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to get moisture reading' });
+    }
+});
+
+router.get('/heartbeat', async (req, res) => {
+    try {
+        const lastTimestamp = await getLastHealthyPing();
+    
+        res.status(200).send(lastTimestamp);
+    }
+    catch (error) {
+        console.error('Failed to get last healthy ping timestamp:', error);
+        res.status(500).json({ error: 'Failed to get last healthy ping timestamp' });
+    }
+});
+
+
 router.get('/settings', async (req, res) => {
     let lastSettingsSyncTimestamp = await getLastSettingsSyncTimestamp();
     const now = Date.now();
@@ -110,7 +145,7 @@ router.get('/settings', async (req, res) => {
     });
 });
 
-router.get('/settings/:key', async (req, res) => {
+router.route('/settings/:key').get(async (req, res) => {
     const key = req.params.key;
     try {
         const settings = await getSettings();
@@ -122,6 +157,23 @@ router.get('/settings/:key', async (req, res) => {
     } catch (error) {
         console.error(`Error fetching setting with key "${key}":`, error);
         res.status(500).json({ error: 'Failed to fetch setting' });
+    }
+}).post(async (req, res) => {
+    const key = req.params.key;
+    const value = req.body;
+
+    if (!value) {
+        res.status(400).json({ error: `Empty body for updating setting ${key}` });
+        return;
+    }
+    
+    try {
+        await updateSetting(key, value);
+        res.status(200).send();
+    }
+    catch (error) {
+        console.error(`Error updating setting ${key}:`, error);
+        res.status(500).json({ error: `Error updating setting ${key}` });
     }
 });
 

@@ -1,13 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { historyReducer } from './slices/history';
-import { settingsReducer } from './slices/settings';
+import { api } from '@/app/api/api';
+import { logsApi } from '@/app/api/logs';
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      history: historyReducer,
-      settings: settingsReducer,
+      [api.reducerPath]: api.reducer,
+      [logsApi.reducerPath]: logsApi.reducer,
     },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat([
+      // settingsMiddleware,
+      api.middleware,
+      logsApi.middleware,
+    ]),
   });
 };
 
