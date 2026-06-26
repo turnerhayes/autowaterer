@@ -1,6 +1,6 @@
 const { insertHistoryLines, getLatestEntryTimestamp } = require('./persistence/history');
 const { upsertSettings } = require('./persistence/settings');
-const { getLastHistorySyncTimestamp, setLastHistorySyncTimestamp, setLastSettingsSyncTimestamp } = require('./persistence/sync_state');
+const { setLastHistorySyncTimestamp, setLastSettingsSyncTimestamp } = require('./persistence/sync_state');
 const { MCU_BASE_URL } = require('./mcu');
 
 

@@ -1,6 +1,6 @@
 import { ChangeEvent, Fragment, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/app/redux/redux";
-import { getAreSettingsLoaded, getSettings } from "@/app/redux/selectors/settings";
+import { useAppSelector } from "@/app/redux/redux";
+import { getSettings } from "@/app/redux/selectors/settings";
 import { ReadableSettingKeyMap, SettingKey, SettingUnits, Settings as ISettings } from "@/app/types";
 
 import styles from "./Settings.module.scss";

@@ -1,19 +1,10 @@
-import { createApi, fakeBaseQuery, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { History, LogEntry, SettingKey, Settings } from "@/app/types";
+import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
+import { LogEntry } from "@/app/types";
 
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const EVENT_SOURCE_URL = `${BASE_URL}/logs/stream`;
 
-let _es: EventSource|null = null;
-
-const getEventSource = () => {
-    if (_es == null) {
-        _es = new EventSource(EVENT_SOURCE_URL);
-    }
-    
-    return _es;
-}
 
 const isLogEntry = (data: any): data is LogEntry => {
     return "level" in data && typeof data.level === "string" &&

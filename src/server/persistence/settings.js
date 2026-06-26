@@ -75,7 +75,7 @@ module.exports.upsertSettings = async (
         settings,
     }
 ) => {
-    const valueParams = Object.entries(settings).map(([key, _], index) => `($${index * 2 + 1}, $${index * 2 + 2})`).join(', ');
+    const valueParams = Object.entries(settings).map((_, index) => `($${index * 2 + 1}, $${index * 2 + 2})`).join(', ');
 
     const query = `
       INSERT INTO settings (key, value)
