@@ -37,7 +37,7 @@ services:
     container_name: autowaterer-ui
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${PORT:-3000}:3000"
     depends_on:
       - autowaterer-api
     env_file:
