@@ -1,5 +1,5 @@
 services:
-  postgres:
+  autowaterer-db:
     image: postgres:16-alpine
     container_name: autowaterer-db
     restart: unless-stopped
@@ -8,38 +8,40 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - autowaterer_postgres_data:/var/lib/postgresql/data
       - ./src/server/persistence/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     env_file:
       - .env
 
-  express:
+  autowaterer-api:
     build:
       context: ./
       dockerfile: src/server/Dockerfile
     container_name: autowaterer-api
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "${API_PORT:-3001}:3001"
     env_file:
       - .env
+    environment:
+      DB_HOST: autowaterer-db
     depends_on:
-      - postgres
+      - autowaterer-db
 
-  nextjs:
+  autowaterer-ui:
     build:
       context: ./
       dockerfile: src/app/Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: http://toth-server.local:3001
+        NEXT_PUBLIC_API_BASE_URL: http://toth-server.local:${API_PORT:-3001}
     container_name: autowaterer-ui
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
     depends_on:
-      - express
+      - autowaterer-api
     env_file:
       - .env
 
 volumes:
-  postgres_data:
+  autowaterer_postgres_data:
