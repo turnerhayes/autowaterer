@@ -12,6 +12,11 @@ services:
       - ./src/server/persistence/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   autowaterer-api:
     build:
@@ -26,7 +31,8 @@ services:
     environment:
       DB_HOST: autowaterer-db
     depends_on:
-      - autowaterer-db
+      autowaterer-db:
+        condition: service_healthy
 
   autowaterer-ui:
     build:
